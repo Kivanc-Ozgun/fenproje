@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Laboratuvarı</title>
+    <style>
+        body {
+            margin: 0;
+            background: #0f172a;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            user-select: none;
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            color: #38bdf8;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+            font-size: 28px;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            margin: 0 0 20px 0;
+            font-size: 14px;
+        }
+
+        .info-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            width: 1000px;
+            background: #1e293b;
+            padding: 12px 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+            font-size: 16px;
+            font-weight: bold;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .score-val { color: #10b981; }
+        .stage-val { color: #38bdf8; }
+        .lives-val { color: #f43f5e; }
+        .time-val { color: #eab308; }
+
+        .timer-container {
+            width: 1000px;
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            display: block;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #eab308, #f43f5e);
+            transition: width 1s linear;
+        }
+
+        #game-container {
+            display: grid;
+            grid-template-columns: 480px 1fr;
+            gap: 25px;
+            width: 1000px;
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 16px;
+            border: 2px solid #334155;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+            box-sizing: border-box;
+        }
+
+        .left-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .source-panel {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #475569;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            height: fit-content;
+        }
+
+        .inspector-panel {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #334155;
+            min-height: 100px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .inspector-title {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .inspector-content {
+            font-size: 14px;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        .element-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            padding: 10px 2px;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .element-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.15);
+        }
+
+        .el-metal { background: #1e3a8a; border-color: #3b82f6; }
+        .el-ametal { background: #064e3b; border-color: #10b981; }
+        .el-soygaz { background: #78350f; border-color: #f59e0b; }
+
+        .element-btn.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .element-btn.wrong-choice {
+            background: #991b1b !important;
+            border-color: #f43f5e !important;
+            box-shadow: 0 0 10px #f43f5e !important;
+        }
+
+        .el-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-weight: bold;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .el-name { font-size: 11px; font-weight: 600; color: #f1f5f9; text-align: center; }
+
+        .reactor-panel {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #334155;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 540px;
+            box-sizing: border-box;
+        }
+
+        .task-box {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #475569;
+            box-sizing: border-box;
+        }
+
+        .task-title {
+            font-size: 16px;
+            color: #f8fafc;
+            line-height: 1.5;
+            margin: 10px 0 0 0;
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #eab308;
+        }
+
+        .guide-btn-container {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .guide-btn {
+            background: #eab308; color: #0f172a; border: none;
+            padding: 8px 16px; font-size: 13px; font-weight: bold;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s;
+        }
+
+        .guide-btn:hover { background: #facc15; box-shadow: 0 0 8px rgba(234, 179, 8, 0.5); }
+        .guide-btn:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+        .interactive-zone {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .compound-card {
+            background: #1e293b; border: 2px solid #475569; border-radius: 8px;
+            padding: 12px; text-align: left; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 15px;
+        }
+
+        .compound-card:hover { border-color: #a855f7; background: #25334d; transform: translateX(5px); }
+
+        .compound-formula {
+            background: #a855f7; color: white; font-weight: bold;
+            padding: 6px 12px; border-radius: 6px; font-size: 15px;
+            min-width: 90px; text-align: center;
+        }
+
+        .compound-desc { font-size: 14px; color: #cbd5e1; }
+        .feedback-msg { font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0; min-height: 25px; }
+
+        #game-over {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); z-index: 300;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .restart-btn {
+            background: #10b981; color: #0f172a; border: none;
+            padding: 12px 24px; font-size: 18px; font-weight: bold;
+            border-radius: 8px; cursor: pointer; margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="main-menu" style="position: fixed; top:0; left:0; width: 100%; height: 100%; background: #0f172a; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+    <h1 style="font-size: 48px; margin-bottom: 20px; color: #38bdf8;">🧪 ELEMENT LABORATUVARI</h1>
+    <p style="color: #94a3b8; font-size: 18px; margin-bottom: 40px;">Elementlerle ilgili deneylerini yap</p>
+    <button onclick="startGame()" style="background: #10b981; color: white; border: none; padding: 15px 40px; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s;">
+        LABORATUVARI BAŞLAT
+    </button>
+</div>
+
+    <h1>ELEMENT LABORATUVARI </h1>
+
+    <div class="info-bar">
+        <span>Skor: <span id="score" class="score-val">0</span></span>
+        <span>Aşama: <span id="game-stage" class="stage-val">Aşama 1: Element Bulma</span></span>
+        <span>Kalan Zaman: <span id="time-left" class="time-val">45</span>s</span>
+        <span>Sistem Sağlığı: <span id="lives" class="lives-val">❤️❤️❤️</span></span>
+    </div>
+
+    <div class="timer-container">
+        <div id="timer-bar" class="timer-bar"></div>
+    </div>
+
+    <div id="game-container">
+        <div class="left-wrapper">
+            <div class="source-panel" id="element-grid">
+                </div>
+
+            <div class="inspector-panel">
+                <div class="inspector-title">Element İnceleme</div>
+                <div id="inspector-text" class="inspector-content">Detayları görmek için paneldeki elementlerin üzerine gelin.</div>
+            </div>
+        </div>
+
+        <div class="reactor-panel">
+            <div class="task-box">
+                <div id="task-badge" style="font-size: 11px; color: #38bdf8; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">AŞAMA 1: ELEMENTİN KULLANIM ALANI</div>
+                <div id="task-text" class="task-title">Yükleniyor...</div>
+
+                <div class="guide-btn-container">
+                    <button id="guide-button" class="guide-btn" onclick="useGuide()">📖 Kılavuz Kullan (<span id="guide-count">3</span>)</button>
+                </div>
+            </div>
+
+            <div class="interactive-zone" id="compound-options-zone" style="display: none;">
+                <p style="margin: 0; font-size: 13px; color: #a855f7; font-weight: bold;">ŞİMDİ BU ELEMENTİN YAYGIN BİLEŞİĞİNİ VEYA FORMÜLÜNÜ SEÇİN:</p>
+                <div id="compound-list"></div>
+            </div>
+
+            <div id="feedback" class="feedback-msg"></div>
+        </div>
+    </div>
+
+    <div id="game-over">
+        <h2 id="game-over-title" style="font-size: 40px; color: #f43f5e; margin: 0;">LABORATUVAR KAPATILDI</h2>
+        <p id="final-score" style="font-size: 22px; margin: 15px 0;">Başarılı Elementler: 0</p>
+        <button class="restart-btn" onclick="resetGame()">Laboratuvarı Yeniden Başlat</button>
+    </div>
+
+<script>
+const chemicalData = [
+    {
+        number: 1, symbol: "H", name: "Hidrojen", class: "ametal", eConfig: "1",
+        descs: [
+            "En hafif elementtir. Evrende en fazla bulunan element olarak kabul edilir.",
+            "Uçan balonları şişirmede, petrolün işlenmesinde, kaynak yapımında ve roketlerde yakıt olarak kullanılmaktadır."
+        ],
+        compounds: [
+            { formula: "H₂O", desc: "Oksijen ile birleşerek gezegenimizdeki can damarı olan Suyu meydana verir." },
+            { formula: "HCl", desc: "Tuz ruhu temizlik malzemesinin formülünde yer alan güçlü asidik bileşik." }
+        ]
+    },
+    {
+        number: 2, symbol: "He", name: "Helyum", class: "soygaz", eConfig: "2",
+        descs: [
+            "En hafif ikinci elementtir. Renksiz, kokusuz, hafif bir gazdır.",
+            "Atmosferimizdeki miktarı azdır. Zeplin ve balon gibi hava taşıtlarını şişirmede kullanılmaktadır."
+        ],
+        compounds: []
+    },
+    {
+        number: 3, symbol: "Li", name: "Lityum", class: "metal", eConfig: "2) 1",
+        descs: [
+            "Yumuşak ve gümüşımsı beyaz renktedir.",
+            "Seramik ve cam yapımında, pil üretiminde ve nükleer santrallerde soğutma amaçlı kullanılmaktadır."
+        ],
+        compounds: [
+            { formula: "Li₂CO₃", desc: "Lityum Karbonat formu tıp dünyasında psikiyatrik ilaçların yapımında rol alır." },
+            { formula: "LiOH", desc: "Karbondioksit emici filtre düzeneklerinde kullanılan lityum esaslı bileşik." }
+        ]
+    },
+    {
+        number: 4, symbol: "Be", name: "Berilyum", class: "metal", eConfig: "2) 2",
+        descs: [
+            "Yeryüzünde en az bulunan elementlerden biridir. Oluşturduğu bileşikler zehirlidir.",
+            "Zümrüt gibi değerli taşların yapısında bulunur. Hava ve uzay araçlarının yapımında, iletişim uydularında, nükleer santrallerde kullanılmaktadır."
+        ],
+        compounds: [
+            { formula: "BeO", desc: "Berilyum Oksit, ısıyı çok iyi iletmesine rağmen elektriği yalıtan özel bir seramik bileşiktir." },
+            { formula: "BeF₂", desc: "Nükleer reaktörlerde erimiş tuz karışımlarında kullanılan berilyum bileşiği." }
+        ]
+    },
+    {
+        number: 5, symbol: "B", name: "Bor", class: "ametal", eConfig: "2) 3",
+        descs: [
+            "Toprakta, kayaçlarda, deniz suyunda ve tatlı sularda bulunur.",
+            "Roket yakıtı, sabun, deterjan, boya ve kâğıt üretiminde, ısıya dayanıklı cam ürünlerinin yapımında kullanılmaktadır."
+        ],
+        compounds: [
+            { formula: "Na₂B₄O₇", desc: "Boraks bileşiği sanayide and deterjan imalatında yaygın kullanılan bor mineralidir." },
+            { formula: "H₃BO₃", desc: "Borik Asit, dezenfektan ve cam imalat sektörlerinde kullanılan fonksiyonel bileşiktir." }
+        ]
+    },
+    {
+        number: 6, symbol: "C", name: "Karbon", class: "ametal", eConfig: "2) 4",
+        descs: [
+            "En fazla bileşik oluşturan elementtir. En saf hâli elmastır. Kömür, petrol ve doğal gazda bulunur.",
+            "Canlıların yapısında da bulunur. Mürekkep, boya, paket lastiği og kurşunkalem ucu üretiminde kullanılır."
+        ],
+        compounds: [
+            { formula: "CO₂", desc: "Karbondioksit gazı; bitkilerin fotosentez hammaddesi ve yangın söndürme gazıdır." },
+            { formula: "CH₄", desc: "Metan gazı, fosil yakıt kaynaklı doğal gazın ana omurgasını oluşturan bileşiktir." }
+        ]
+    },
+    {
+        number: 7, symbol: "N", name: "Azot", class: "ametal", eConfig: "2) 5",
+        descs: [
+            "Atmosferde en fazla bulunan renksiz ve kokusuz bir gazdır.",
+            "Canlıların yapısında da bulunur. En yaygın olarak amonyak, gübre, patlayıcı ve boya üretiminde kullanılır."
+        ],
+        compounds: [
+            { formula: "NH₃", desc: "Amonyak; azotlu yapay gübrelerde ve evsel temizlik sıvılarında hammadde bileşiktir." },
+            { formula: "HNO₃", desc: "Kezzap adıyla bilinen, nitratlı gübre ve patlayıcı sanayisinin temel taşı asidik bileşik." }
+        ]
+    },
+    {
+        number: 8, symbol: "O", name: "Oksijen", class: "ametal", eConfig: "2) 6",
+        descs: [
+            "Doğada en fazla bulunan renksiz ve kokusuz bir gazdır. Havada, suda ve toprakta bulunur.",
+            "Canlıların solunumu için gereklidir. Demir, çelik gibi malzemeleri kesmek ve dalış tüplerini doldurmak amacıyla kullanılmaktadır."
+        ],
+        compounds: [
+            { formula: "O₃", desc: "Ozon gazı olarak atmosferin üst katmanlarında dünyayı zararlı ışınlardan korur." },
+            { formula: "H₂O₂", desc: "Hidrojen Peroksit, halk arasında oksijenli su olarak bilinen antiseptik bileşiktir." }
+        ]
+    },
+    {
+        number: 9, symbol: "F", name: "Flor", class: "ametal", eConfig: "2) 7",
+        descs: [
+            "İçme sularının mikroplardan arındırılmasında, aydınlatma ampullerinin camları üzerine yazı yazılmasında kullanılır.",
+            "Havalandırma ve soğutma aletlerinde kullanılmaktadır. Diş macunları ve deodorantların yapısında bulunmaktadır."
+        ],
+        compounds: [
+            { formula: "NaF", desc: "Sodyum Florür, diş minesini güçlendirmesi için macunlara eklenen flor bileşiğidir." },
+            { formula: "HF", desc: "Hidroflorik Asit; cam yüzeyleri aşındırıp yazı yazmak/desen işlemek için kullanılan tek asittir." }
+        ]
+    },
+    {
+        number: 10, symbol: "Ne", name: "Neon", class: "soygaz", eConfig: "2) 8",
+        descs: [
+            "Renksiz ve kokusuz bir gazdır. Herhangi bir elementle tepkimeye girmez.",
+            "Televizyon tüplerinde, renkli reklam aydınlatmalarında ve paratonerlerde kullanılmaktadır."
+        ],
+        compounds: []
+    },
+    {
+        number: 11, symbol: "Na", name: "Sodyum", class: "metal", eConfig: "2) 8) 1",
+        descs: [
+            "Yeryüzünde en çok bulunan elementlerden biridir. Doğada katı hâlde bulunur.",
+            "Denizlerde, sofra tuzunda ve canlıların yapısında bulunan bu element; sokak aydınlatmalarında, pillerde, cam yapımında da kullanılmaktadır."
+        ],
+        compounds: [
+            { formula: "NaCl", desc: "Sofra tuzu; denizlerde ve vücut sıvılarında bulunan temel bileşik." },
+            { formula: "NaHCO₃", desc: "Yemek sodası olarak bilinen, gıda ve hamur kabartma sektöründe kullanılan sodyumlu bileşik." }
+        ]
+    },
+    {
+        number: 12, symbol: "Mg", name: "Magnezyum", class: "metal", eConfig: "2) 8) 2",
+        descs: [
+            "Yeryüzünde en çok bulunan elementlerden biridir. Canlıların yapısında, deniz suyunda bol miktarda bulunur.",
+            "İlaç, cam ve uçak parçaları üretiminde, fotoğraf makinelerinin gövde ve flaş kaplamalarında kullanılmaktadır."
+        ],
+        compounds: [
+            { formula: "MgSO₄", desc: "Epsom tuzu (Magnezyum Sülfat), tarımda magnezyum eksikliğini gidermede kullanılır." },
+            { formula: "MgO", desc: "Magnezyum Oksit, yüksek erime noktası nedeniyle refrakter (ateş) tuğlası yapımında kullanılır." }
+        ]
+    },
+    {
+        number: 13, symbol: "Al", name: "Alüminyum", class: "metal", eConfig: "2) 8) 3",
+        descs: [
+            "Yeryüzünde çok miktarda vardır. Kayaç ve minerallerin yapısında bulunur.",
+            "İçecek kutuları ve CD'lerin üretiminde, hafifliği nedeniyle de uçak, roket ve bisiklet gibi taşıtların gövdelerinin yapımında kullanılır."
+        ],
+        compounds: [
+            { formula: "Al₂O₃", desc: "Alüminyum Oksit; seramik sanayisinde kullanılmaktadır." },
+            { formula: "AlCl₃", desc: "Deodorantların içeriğinde ter önleyici aktif bileşen olarak kullanılan alüminyum tuzu." }
+        ]
+    },
+    {
+        number: 14, symbol: "Si", name: "Silisyum", class: "ametal", eConfig: "2) 8) 4",
+        descs: [
+            "Yeryüzünde en çok bulunan elementlerden biridir. Doğada katı hâlde bulunur. İnsan iskeletinin yapısında da bulunur.",
+            "Bileşiği olan kum ve kil, yapı malzemesi olarak kullanılır. Camın yapısında bulunur."
+        ],
+        compounds: [
+            { formula: "SiO₂", desc: "Silis (Silisyum Dioksit) doğada kum ve kuvars kristali olarak pencerelerimizdeki camı oluşturur." },
+            { formula: "SiC", desc: "Silisyum Karbür; zımpara kağıtlarında kesici ve pürüz giderici katman olarak kullanılan bileşiktir." }
+        ]
+    },
+    {
+        number: 15, symbol: "P", name: "Fosfor", class: "ametal", eConfig: "2) 8) 5",
+        descs: [
+            "Canlılarda sinir ve kemik dokuları için çok önemlidir. Yanıcı olması sebebiyle havai fişek üretiminde kullanılır.",
+            "Kibrit ve patlayıcı madde üretiminde kullanılır. Karanlıkta parlama özelliğine sahiptir. Zehirli bir elementtir."
+        ],
+        compounds: [
+            { formula: "H₃PO₄", desc: "Fosforik Asit; asitli gazlı içeceklerde aroma ve koruyucu amaçlı kullanılan bileşik." },
+            { formula: "Ca₃(PO₄)₂", desc: "Kalsiyum Fosfat; kemik dokularımızın sert yapısını kuran bileşik." }
+        ]
+    },
+    {
+        number: 16, symbol: "S", name: "Kükürt", class: "ametal", eConfig: "2) 8) 6",
+        descs: [
+            "Canlılar için önemli bir elementtir. Genellikle yanardağ ve sıcak su kaynaklarının yakınlarında bulunan bir elementtir.",
+            "Ağırlıklı olarak barut yapımında kullanılmaktadır."
+        ],
+        compounds: [
+            { formula: "H₂SO₄", desc: "Zaç Yağı (Sülfürik Asit); akü imalatında ve gübre sanayisinde hammadde bileşiktir." },
+            { formula: "SO₂", desc: "Kükürt Dioksit; kuru meyvelerin rengini korumak ve tütsülemek için kullanılan gaz bileşik." }
+        ]
+    },
+    {
+        number: 17, symbol: "Cl", name: "Klor", class: "ametal", eConfig: "2) 8) 7",
+        descs: [
+            "Zehirli bir elementtir. Sofra tuzunun ve deniz suyunun yapısında bulunur.",
+            "İçme sularını arıtmada ve yüzme havuzu sularını temizlemede kullanılır."
+        ],
+        compounds: [
+            { formula: "NaClO", desc: "Sodyum Hipoklorit, yani evlerimizde hijyen sağlayan çamaşır suyunun formülüdür." },
+            { formula: "HCl", desc: "Hidrojen Klorür asidi; temizlik bileşiklerinin eldesinde rol oynar." }
+        ]
+    },
+    {
+        number: 18, symbol: "Ar", name: "Argon", class: "soygaz", eConfig: "2) 8) 8",
+        descs: [
+            "Kokusuz ve renksiz bir gazdır.",
+            "Elektrikli aydınlatma ampullerinde ve floresan tüplerde, kesim ve kaynak işlemlerinde kullanılmaktadır."
+        ],
+        compounds: []
+    }
+];
+
+let currentData = null;
+let selectedDesc = "";
+let selectedCompound = null;
+let currentStage = 1;
+let score = 0;
+let lives = 3;
+let guideRights = 3;
+let timeLeft = 45;
+let maxTime = 45;
+let countdownInterval = null;
+let gameOver = false;
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function startGame() {
+    document.getElementById('main-menu').style.display = 'none'; // Menüyü kapat
+    createGrid();
+    nextQuestion();
+    startTimer();
+}
+
+function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+
+    if (type === 'success') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+    } else if (type === 'stageUp') {
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    } else if (type === 'error') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(70, audioCtx.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    } else if (type === 'gameover') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(40, audioCtx.currentTime + 0.8);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.8);
+    }
+}
+
+function createGrid() {
+    const grid = document.getElementById("element-grid");
+    grid.innerHTML = "";
+    chemicalData.forEach(el => {
+        const btn = document.createElement("div");
+        btn.className = `element-btn el-${el.class}`;
+        btn.id = "btn-" + el.symbol;
+        btn.onclick = () => handleElementClick(el);
+
+        btn.onmouseenter = () => {
+            const trClass = el.class === 'metal' ? 'Metal' : (el.class === 'ametal' ? 'Ametal' : 'Soygaz');
+            document.getElementById("inspector-text").innerHTML = `
+                <b>Adı:</b> ${el.name} (${el.symbol}) | <b>Atom No:</b> ${el.number}<br>
+                <b>Sınıf:</b> ${trClass} | <b>Katman Dağılımı:</b> ${el.eConfig}
+            `;
+        };
+
+        btn.onmouseleave = () => {
+            document.getElementById("inspector-text").innerText = "Detayları görmek için sol paneldeki elementlerin üzerine gelin.";
+        };
+
+        btn.innerHTML = `
+            <div class="el-badge">${el.symbol}</div>
+            <div class="el-name">${el.name}</div>
+        `;
+        grid.appendChild(btn);
+    });
+}
+
+function startTimer() {
+    clearInterval(countdownInterval);
+    const bar = document.getElementById("timer-bar");
+
+    countdownInterval = setInterval(() => {
+        if (gameOver) return;
+
+        timeLeft--;
+        document.getElementById("time-left").innerText = timeLeft;
+
+        const percentage = (timeLeft / maxTime) * 100;
+        bar.style.width = `${Math.max(0, percentage)}%`;
+
+        if (timeLeft <= 0) {
+            endGame("ELEMENTLERİ ÇALDIRDIN! SÜRE BİTTİ.");
+        }
+    }, 1000);
+}
+
+function nextQuestion() {
+    if (gameOver) return;
+
+    currentStage = 1;
+    document.getElementById("game-stage").innerText = "Aşama 1: Element Keşfi";
+    document.getElementById("task-badge").innerText = "AŞAMA 1: ELEMENTİN KULLANIM ALANI";
+    document.getElementById("task-badge").style.color = "#38bdf8";
+    document.getElementById("compound-options-zone").style.display = "none";
+    document.getElementById("feedback").innerText = "";
+
+    updateGuideButtonState();
+
+    const buttons = document.querySelectorAll(".element-btn");
+    buttons.forEach(b => {
+        b.classList.remove("disabled");
+        b.style.borderColor = "";
+        b.style.boxShadow = "";
+    });
+
+    let next;
+    do {
+        next = chemicalData[Math.floor(Math.random() * chemicalData.length)];
+    } while (currentData && next.number === currentData.number);
+
+    currentData = next;
+    selectedDesc = currentData.descs[Math.floor(Math.random() * currentData.descs.length)];
+
+    if(currentData.class !== "soygaz") {
+        selectedCompound = currentData.compounds[Math.floor(Math.random() * currentData.compounds.length)];
+    } else {
+        selectedCompound = null;
+    }
+
+    document.getElementById("task-text").innerText = `${selectedDesc}`;
+}
+
+function useGuide() {
+    if (guideRights <= 0 || currentStage !== 1 || gameOver) return;
+
+    guideRights--;
+    document.getElementById("guide-count").innerText = guideRights;
+
+    const feedback = document.getElementById("feedback");
+    feedback.style.color = "#eab308";
+    feedback.innerText = `📖 Kılavuz Yardımı: Aradığın element "${currentData.name} (${currentData.symbol})"`;
+
+    const targetBtn = document.getElementById("btn-" + currentData.symbol);
+    if(targetBtn) {
+        targetBtn.style.borderColor = "#eab308";
+        targetBtn.style.boxShadow = "0 0 15px #eab308";
+        setTimeout(() => {
+            if (currentStage === 1) {
+                targetBtn.style.borderColor = "";
+                targetBtn.style.boxShadow = "";
+            }
+        }, 3000);
+    }
+    updateGuideButtonState();
+}
+
+function updateGuideButtonState() {
+    const btn = document.getElementById("guide-button");
+    if (currentStage === 1 && guideRights > 0 && !gameOver) {
+        btn.disabled = false;
+    } else {
+        btn.disabled = true;
+    }
+}
+
+function handleElementClick(selectedEl) {
+    if (gameOver || currentStage !== 1) return;
+
+    const feedback = document.getElementById("feedback");
+    const clickedBtn = document.getElementById("btn-" + selectedEl.symbol);
+
+    if (selectedEl.number === currentData.number) {
+        if (currentData.class === "soygaz") {
+            playSound('success');
+            score += 20;
+            timeLeft = Math.min(maxTime, timeLeft + 10);
+            document.getElementById("score").innerText = score;
+            document.getElementById("time-left").innerText = timeLeft;
+            feedback.style.color = "#38bdf8";
+            feedback.innerText = `✨ Mükemmel! ${currentData.name} bir Soygazdır ve reaksiyona girmez. Deney tamamlandı! (+20 Puan)`;
+            setTimeout(nextQuestion, 1500);
+        } else {
+            playSound('stageUp');
+            currentStage = 2;
+            document.getElementById("game-stage").innerText = "Aşama 2: Bileşik Sentezi";
+            document.getElementById("task-badge").innerText = "AŞAMA 2: ELEMENTİN BİLEŞİĞİ";
+            document.getElementById("task-badge").style.color = "#a855f7";
+            document.getElementById("task-text").innerHTML = `✔ <b>${currentData.name} (${currentData.symbol})</b> tespit edildi. Şimdi bu elementin oluşturduğu yaygın molekülü seçip reaksiyonu tamamla!`;
+
+            updateGuideButtonState();
+
+            const buttons = document.querySelectorAll(".element-btn");
+            buttons.forEach(b => {
+                if(b.id !== "btn-" + currentData.symbol) b.classList.add("disabled");
+            });
+
+            showCompoundOptions();
+        }
+    } else {
+        playSound('error');
+        if (clickedBtn) {
+            clickedBtn.classList.add("wrong-choice");
+            setTimeout(() => clickedBtn.classList.remove("wrong-choice"), 800);
+        }
+        feedback.style.color = "#f43f5e";
+        feedback.innerText = `❌ Yanlış Element!`;
+        reduceLife();
+    }
+}
+
+// Geliştirilen ve Mutlak Filtreleme Eklenen Alan:
+function showCompoundOptions() {
+    const zone = document.getElementById("compound-options-zone");
+    const listContainer = document.getElementById("compound-list");
+    listContainer.innerHTML = "";
+    zone.style.display = "block";
+
+    let options = [selectedCompound];
+    const targetSymbol = currentData.symbol; // Örn: "S" veya "Cl"
+
+    // YENİ FİLTRELEME MANTIĞI:
+    // Yanlış şıklar havuzdan çekilirken, formülünde hedef elementin sembolü
+    // kesinlikle bulunmayan bileşikler seçilecek.
+    while(options.length < 3) {
+        let randomEl = chemicalData[Math.floor(Math.random() * chemicalData.length)];
+
+        if(randomEl.number !== currentData.number && randomEl.class !== "soygaz" && randomEl.compounds.length > 0) {
+            let randomComp = randomEl.compounds[Math.floor(Math.random() * randomEl.compounds.length)];
+
+            // ÇAKIŞMA ENGELİ:
+            // Bileşiğin formülünde hedef elementin sembolü (örn: 'S') var mı?
+            // Regex ile sadece o harfin geçip geçmediğine değil,
+            // kimyasal sembol olarak geçip geçmediğine bakıyoruz.
+            const hasTargetSymbol = new RegExp(targetSymbol + '(?![a-z])').test(randomComp.formula);
+
+            // Filtre kriterleri:
+            // 1. Aynı şık zaten eklenmemiş olmalı.
+            // 2. Açıklamasında elementin adı geçmemeli.
+            // 3. Formülünde hedef elementin sembolü kesinlikle olmamalı.
+            if(!options.some(o => o.formula === randomComp.formula) &&
+               !randomComp.desc.toLowerCase().includes(currentData.name.toLowerCase()) &&
+               !hasTargetSymbol) {
+                options.push(randomComp);
+            }
+        }
+    }
+
+    options.sort(() => Math.random() - 0.5);
+    options.forEach(opt => {
+        const card = document.createElement("div");
+        card.className = "compound-card";
+        card.onclick = () => handleCompoundClick(opt);
+        card.innerHTML = `
+            <div class="compound-formula">${opt.formula}</div>
+            <div class="compound-desc">${opt.desc}</div>
+        `;
+        listContainer.appendChild(card);
+    });
+}
+
+function handleCompoundClick(selectedOpt) {
+    if (gameOver || currentStage !== 2) return;
+    const feedback = document.getElementById("feedback");
+
+    if (selectedOpt.formula === selectedCompound.formula) {
+        playSound('success');
+        score += 20;
+        timeLeft = Math.min(maxTime, timeLeft + 10);
+        document.getElementById("time-left").innerText = timeLeft;
+        document.getElementById("score").innerText = score;
+        feedback.style.color = "#10b981";
+        feedback.innerText = `🎉 Harika Eşleştirme! Deney başarıyla bitti. Reaktöre +10sn eklendi!`;
+        setTimeout(nextQuestion, 1200);
+    } else {
+        playSound('error');
+        feedback.style.color = "#f43f5e";
+        feedback.innerText = `❌ Yanlış Bileşik.`;
+        reduceLife();
+    }
+}
+
+function reduceLife() {
+    lives--;
+    let hearts = "";
+    for(let i=0; i<lives; i++) hearts += "❤️";
+    document.getElementById("lives").innerText = hearts || "SİSTEM ÇÖKTÜ";
+    if (lives <= 0) {
+        endGame("LABORATUVARI AMERİKA ELE GEÇİRDİ!!! CANINIZ BİTTİ.");
+    }
+}
+
+function endGame(reasonText) {
+    gameOver = true;
+    clearInterval(countdownInterval);
+    playSound('gameover');
+    updateGuideButtonState();
+    document.getElementById("game-over-title").innerText = reasonText;
+    document.getElementById("final-score").innerText = `Toplam Başarı Puanın: ${score}`;
+    document.getElementById("game-over").style.display = "flex";
+}
+
+function resetGame() {
+    score = 0;
+    lives = 3;
+    guideRights = 3;
+    timeLeft = 45;
+    gameOver = false;
+    currentData = null;
+    document.getElementById("score").innerText = score;
+    document.getElementById("lives").innerText = "❤️❤️❤️";
+    document.getElementById("guide-count").innerText = guideRights;
+    document.getElementById("time-left").innerText = timeLeft;
+    document.getElementById("timer-bar").style.width = "100%";
+    document.getElementById("game-over").style.display = "none";
+    createGrid();
+    nextQuestion();
+    startTimer();
+}
+
+
+</script>
+</body>
+</html>
